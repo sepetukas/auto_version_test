@@ -53,6 +53,8 @@ gulp.task('bump', function () {
 function releaseVersion(options) {
     execSync('git checkout develop', {stdio: [0, 1, 2]});
 
+    execSync("npm run test", {stdio: [0, 1, 2]});
+
     log('Bumping versions for a patch');
 
     var version = null;
