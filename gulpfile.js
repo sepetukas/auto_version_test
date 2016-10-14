@@ -16,3 +16,4 @@ require('gulp-task-loader')();
 
 // Load watcher tasks from gulp-tasks folder, watchers subdirectory
 require('gulp-task-loader')('gulp-tasks/watchers');
+require('gulp-task-loader')('gulp-tasks/auto-versioning');

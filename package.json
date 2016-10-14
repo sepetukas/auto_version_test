@@ -96,6 +96,7 @@
     "run-sequence": "1.2.2",
     "sass-loader": "3.2.0",
     "selenium-standalone": "5.1.0",
+    "shell-quote": "1.6.1",
     "sinon": "next",
     "sinon-stub-promise": "3.0.1",
     "snyk": "1.17.4",
