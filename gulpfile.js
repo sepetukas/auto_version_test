@@ -71,14 +71,14 @@ function releaseVersion(options) {
 
     log('Bumping versions for a patch');
 
-    var uncommittedChanges = null;
+    let uncommittedChanges,version = null;
 
     return gulp
         .src(config.packages)
         .pipe($.print())
         .pipe($.confirm({
             question: function () {
-               return $.util.colors.blue(`Now next command will be performed:\n git checkout develop\n git commit\n git push origin develop\n git push origin staging\ Conitnue?`);
+               return $.util.colors.blue(`Now next command will be performed:\n git checkout develop\n git commit\n git push origin develop\n git push origin staging\n Continue?`);
             },
             input: '_key:y'
         }))
@@ -100,15 +100,19 @@ function releaseVersion(options) {
             input: '_key:y'
         }))
         .pipe($.bump(options))
+        .pipe($.tap(function (file) {
+            var json = JSON.parse(file.contents.toString());
+            version = json.version;
+        }))
         .pipe(gulp.dest(config.root))
         .on('end', function () {
-            // execSync('git commit -a -m "Bumped version number to ' + version + '"' +
-            //     ' && git checkout staging' +
-            //     ' && git merge --no-ff develop' +
-            //     ' && git tag -a v' + version + '-dev -m "version ' + version + '"' +
-            //     ' && git push origin develop --tags' +
-            //     ' && git push origin staging --tags' +
-            //     ' && git checkout develop', {stdio: [0, 1, 2]});
+            execSync('git commit -a -m "Bumped version number to ' + version + '"' +
+                ' && git checkout staging' +
+                ' && git merge --no-ff develop' +
+                ' && git tag -a v' + version + '-dev -m "version ' + version + '"' +
+                ' && git push origin develop --tags' +
+                ' && git push origin staging --tags' +
+                ' && git checkout develop', {stdio: [0, 1, 2]});
         });
 }
 
@@ -127,7 +131,11 @@ gulp.task('release-minor-version', function () {
     var options = {};
     options.type = 'minor';
 
-    releaseVersion(options);
+    let stream=releaseVersion(options);
+    stream.on('end', function () {
+
+        callback();
+    });
 });
 
 /**
