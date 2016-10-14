@@ -1,6 +1,11 @@
 var gulp = require('gulp'),
-	config = require('./gulp.config.js')();
-var execSync = require('child_process').execSync;
+	config = require('./gulp.config.js')(),
+ execSync = require('child_process').execSync,
+    spawnSync =require('child_process').spawnSync,
+    through2 = require('through2'),
+
+    fs = require("fs");
+
 
 var $ = require('gulp-load-plugins')({lazy: true});
 
@@ -52,18 +57,48 @@ gulp.task('bump', function () {
 
 function releaseVersion(options) {
 
+    const UsageError = class extends Error {
+        constructor(message) {
+            super(message);
+            this.name = 'UsageError';
+        }
+    };
 
-    execSync('git checkout develop', {stdio: [0, 1, 2]});
 
-    execSync("npm run test", {stdio: [0, 1, 2]});
+
+
+
 
     log('Bumping versions for a patch');
 
-    var version = null;
+    let uncommittedChanges,version = null;
 
     return gulp
         .src(config.packages)
         .pipe($.print())
+        .pipe($.confirm({
+            question: function () {
+               return $.util.colors.blue(`Now next command will be performed:\n git checkout develop\n git commit\n git push origin develop\n git push origin staging\n Continue?`);
+            },
+            input: '_key:y'
+        }))
+        .pipe(through2.obj(function (chunk, enc, callback) {
+
+            execSync('git checkout develop', {stdio: [0, 1, 2]});
+            if (execSync('git status -s --untracked-files=no').length) {
+                uncommittedChanges=true;
+            }
+
+            this.push(chunk);
+            callback();
+
+        }))
+        .pipe($.confirm({
+            question: function () {
+                return uncommittedChanges?$.util.colors.blue(`you have uncommitted changes continue? (All changes will be committed)?:`):false;
+            },
+            input: '_key:y'
+        }))
         .pipe($.bump(options))
         .pipe($.tap(function (file) {
             var json = JSON.parse(file.contents.toString());
@@ -81,18 +116,26 @@ function releaseVersion(options) {
         });
 }
 
-gulp.task('release-patch-version', function () {
-    var options = {};
+gulp.task('release-patch-version', function (callback) {
+    let options = {};
     options.type = 'patch';
 
-    releaseVersion(options);
+    let stream=releaseVersion(options);
+    stream.on('end', function () {
+
+        callback();
+    });
 });
 
 gulp.task('release-minor-version', function () {
     var options = {};
     options.type = 'minor';
 
-    releaseVersion(options);
+    let stream=releaseVersion(options);
+    stream.on('end', function () {
+
+        callback();
+    });
 });
 
 /**
