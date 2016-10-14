@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--[if lte IE 8]>
+<html class="ie8 checked-unsupported" lang="en"><![endif]-->
+<!--[if IE 9]>
+<html class="ie9" lang="en"><![endif]-->
+<!--[if !IE]>
+<html lang="en"><![endif]-->
+<head>
+    <meta charset="UTF-8">
+    <title>CIBC OmniChannel Admin</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, minimal-ui"/>
+    <meta name="HandheldFriendly" content="true">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="address=no">
+    <link type="text/css" rel="stylesheet" href="//fast.fonts.net/cssapi/f747c3ce-8498-4cad-9967-f5dda7f1f000.css"/>
+    <link href="/styles/site-styles.css" rel="stylesheet" type="text/css"/>
+    <base href="/">
+    <link rel="shortcut icon" href="/favicon.ico">
+</head>
+<body ng-cloak cibc-loader>
+<noscript>
+    <div>This site requires JavaScript. It is either disabled or not supported by your browser.</div>
+</noscript>
+<div class="page">
+    <header class="page-header">
+        <div class="page-header__inner">
+            <div class="page-frame clearfix">
+                <a class="page-header__logo" href="/">
+                    <img src="/images/cibc-logo.svg" alt="CIBC" />
+                    <span>Banking that fits your life. </span>
+                </a>
+                <!--<a class="page-header__controls" href="#nolink">Logout</a>-->
+            </div>
+        </div>
+    </header>
+    <main class="page-content">
+        <div ui-view></div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+node_modules
+/dist
+/reports
+/build
+/coverage
+
+.tmp
+.sass-cache
+.idea
+*.iml
+stats.json
+*.log
+
