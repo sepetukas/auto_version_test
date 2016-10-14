@@ -1,6 +1,6 @@
 {
   "name": "cibc-omni-channel-admin-frontend",
-  "version": "0.5.14",
+  "version": "0.5.16",
   "description": "CIBC OmniChannel Admin Portal frontend",
   "private": true,
   "scripts": {},

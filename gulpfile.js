@@ -65,47 +65,41 @@ function releaseVersion(options) {
     };
 
 
-    execSync('git checkout develop', {stdio: [0, 1, 2]});
+
 
 
 
     log('Bumping versions for a patch');
 
-    var version = null;
+    var uncommittedChanges = null;
 
     return gulp
         .src(config.packages)
         .pipe($.print())
         .pipe($.confirm({
             question: function () {
-                var files = fs.readFileSync("./package.json");
-                var json = JSON.parse(files.toString());
-                version = json["version"];
-
-                return `Current version is ${version}. Set it to ??? `;
+               return $.util.colors.blue(`Now next command will be performed:\n git checkout develop\n git commit\n git push origin develop\n git push origin staging\ Conitnue?`);
             },
             input: '_key:y'
         }))
         .pipe(through2.obj(function (chunk, enc, callback) {
 
-            // let res=spawnSync("npm",["run" ,"test"]);
-            // console.log(res.stderr.toString().trim());
-
+            execSync('git checkout develop', {stdio: [0, 1, 2]});
             if (execSync('git status -s --untracked-files=no').length) {
-                throw new UsageError(
-                    'You have uncommited changes! Commit them before running this script');
+                uncommittedChanges=true;
             }
 
             this.push(chunk);
             callback();
 
-
+        }))
+        .pipe($.confirm({
+            question: function () {
+                return uncommittedChanges?$.util.colors.blue(`you have uncommitted changes continue? (All changes will be committed)?:`):false;
+            },
+            input: '_key:y'
         }))
         .pipe($.bump(options))
-        // .pipe($.tap(function (file) {
-        //     var json = JSON.parse(file.contents.toString());
-        //     version = json.version;
-        // }))
         .pipe(gulp.dest(config.root))
         .on('end', function () {
             // execSync('git commit -a -m "Bumped version number to ' + version + '"' +
