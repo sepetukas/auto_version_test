@@ -1,7 +1,7 @@
 var gulp = require('gulp'),
-	config = require('./gulp.config.js')(),
- execSync = require('child_process').execSync,
-    spawnSync =require('child_process').spawnSync,
+    config = require('./gulp.config.js')(),
+    execSync = require('child_process').execSync,
+    spawnSync = require('child_process').spawnSync,
     through2 = require('through2'),
 
     fs = require("fs");
@@ -10,10 +10,10 @@ var gulp = require('gulp'),
 var $ = require('gulp-load-plugins')({lazy: true});
 
 gulp.task('check-deps', function () {
-	require('check-dependencies')({
-		install: true,
-		verbose: false
-	});
+    require('check-dependencies')({
+        install: true,
+        verbose: false
+    });
 });
 
 gulp.task('develop', ['clear-image-cache', 'watch-scss', 'watch-svg', /*'watch-webpack',*/ 'watch-images-optimize']);
@@ -64,30 +64,25 @@ function releaseVersion(options) {
         }
     };
 
-
-
-
-
-
     log('Bumping versions for a patch');
 
-    let uncommittedChanges,version = null;
+    let uncommittedChanges, version = null;
 
     return gulp
         .src(config.packages)
         .pipe($.print())
         .pipe($.confirm({
             question: function () {
-               return $.util.colors.blue(`Now next command will be performed:\n git checkout develop\n git commit\n git push origin develop\n git push origin staging\n Continue?`);
+                return $.util.colors.blue(`Now next command will be performed:\n git checkout develop\n git commit\n git push origin develop\n git push origin staging\n Continue?`);
             },
             input: '_key:y'
         }))
         .pipe(through2.obj(function (chunk, enc, callback) {
 
             execSync('git checkout develop', {stdio: [0, 1, 2]});
-            let output=spawnSync("git",["status", "-s" , "--untracked-files=no"]);
+            let output = spawnSync("git", ["status", "-s", "--untracked-files=no"]);
             if (output.stdout.toString().trim().length) {
-                uncommittedChanges=true;
+                uncommittedChanges = true;
             }
 
             this.push(chunk);
@@ -96,7 +91,7 @@ function releaseVersion(options) {
         }))
         .pipe($.confirm({
             question: function () {
-                return uncommittedChanges?$.util.colors.blue(`you have uncommitted changes continue? (All changes will be committed)?:`):false;
+                return uncommittedChanges ? $.util.colors.blue(`you have uncommitted changes continue? (All changes will be committed)?:`) : false;
             },
             input: '_key:y'
         }))
@@ -121,7 +116,7 @@ gulp.task('release-patch-version', function (callback) {
     let options = {};
     options.type = 'patch';
 
-    let stream=releaseVersion(options);
+    let stream = releaseVersion(options);
     stream.on('end', function () {
 
         callback();
@@ -132,7 +127,7 @@ gulp.task('release-minor-version', function () {
     var options = {};
     options.type = 'minor';
 
-    let stream=releaseVersion(options);
+    let stream = releaseVersion(options);
     stream.on('end', function () {
 
         callback();
