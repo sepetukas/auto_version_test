@@ -101,7 +101,7 @@ function releaseVersion(options) {
             version = json.version;
         }))
         .pipe(gulp.dest(config.root))
-        .on('end', function () {
+        .pipe(through2.obj(function (chunk, enc, callback) {
             execSync('git commit -a -m "Bumped version number to ' + version + '"' +
                 ' && git checkout staging' +
                 ' && git merge --no-ff develop' +
@@ -109,7 +109,8 @@ function releaseVersion(options) {
                 ' && git push origin develop --tags' +
                 ' && git push origin staging --tags' +
                 ' && git checkout develop', {stdio: [0, 1, 2]});
-        });
+            callback();
+        }));
 }
 
 gulp.task('release-patch-version', function (callback) {
