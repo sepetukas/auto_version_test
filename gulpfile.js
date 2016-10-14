@@ -85,7 +85,8 @@ function releaseVersion(options) {
         .pipe(through2.obj(function (chunk, enc, callback) {
 
             execSync('git checkout develop', {stdio: [0, 1, 2]});
-            if (execSync('git status -s --untracked-files=no').length) {
+            let output=spawnSync("git",["status", "-s" , "--untracked-files=no"]);
+            if (output.stdout.toString().trim().length) {
                 uncommittedChanges=true;
             }
 
