@@ -6,6 +6,14 @@ module.exports = function () {
 		pngFallback: false
 	};
 	var config = {
+
+        root:"./",
+            /**
+             * NPM files
+             */
+            packages: [
+                './package.json'
+            ],
 			path: {
 				HTML: '/index.html',
 				ALL: ['src/app/main.js'],
