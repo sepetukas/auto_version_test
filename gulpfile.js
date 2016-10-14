@@ -51,6 +51,8 @@ gulp.task('bump', function () {
 });
 
 function releaseVersion(options) {
+
+
     execSync('git checkout develop', {stdio: [0, 1, 2]});
 
     execSync("npm run test", {stdio: [0, 1, 2]});
@@ -82,6 +84,13 @@ function releaseVersion(options) {
 gulp.task('release-patch-version', function () {
     var options = {};
     options.type = 'patch';
+
+    releaseVersion(options);
+});
+
+gulp.task('release-minor-version', function () {
+    var options = {};
+    options.type = 'minor';
 
     releaseVersion(options);
 });
