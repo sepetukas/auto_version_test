@@ -125,6 +125,11 @@ function releaseVersion(options) {
         }))
         .pipe(through2.obj(function (chunk, enc, callback) {
             execSync("git checkout develop", {stdio: [0, 1, 2]});
+            let localRef=execSync("git rev-parse develop").toString();
+            let remoteRef=execSync("git rev-parse origin/develop").toString();
+            if(localRef != remoteRef){
+                throw "Your local develop branch is ahead/behind remote one. Please fix it.";
+            }
             let output = spawnSync("git", ["status", "-s", "--untracked-files=no"]);
             if (output.stdout.toString().trim().length) {
                 uncommittedChanges = true;
