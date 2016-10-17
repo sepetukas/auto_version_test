@@ -1,6 +1,7 @@
 var gulp = require('gulp'),
     config = require('./gulp.config.js')(),
     execSync = require('child_process').execSync,
+    exec = require("child_process").exec,
     spawnSync = require('child_process').spawnSync,
     through2 = require('through2'),
 
@@ -57,16 +58,52 @@ gulp.task('bump', function () {
 
 function releaseVersion(options) {
 
-    const UsageError = class extends Error {
-        constructor(message) {
-            super(message);
-            this.name = 'UsageError';
-        }
-    };
-
-    log('Bumping versions for a patch');
-
     let uncommittedChanges, version = null;
+    let runTest = false;
+
+    function tests(command) {
+        return through2.obj(function (chunk, enc, callback) {
+            if (runTest) {
+                let output = exec(command);
+                output.stdout.on("data", function (data) {
+                    $.util.log($.util.colors.white("stdout: " + data));
+                });
+
+                output.on("close", (code)=> {
+                    if (code == 1) {
+                        throw "Test failed";
+                    }
+                    this.push(chunk);
+                    callback();
+                });
+            } else {
+                this.push(chunk);
+                callback();
+            }
+        });
+
+    }
+
+    function lint() {
+        return through2.obj(function (chunk, enc, callback) {
+            log("Running lint...");
+            let output = exec("npm run lint");
+            output.stdout.on("data", function (data) {
+                $.util.log($.util.colors.white("stdout: " + data));
+            });
+
+            output.on("close", (code)=> {
+                if (code == 1) {
+                    throw "Lint failed";
+                }
+                log("Running lint...Close");
+                this.push(chunk);
+                callback();
+            });
+
+        });
+
+    }
 
     return gulp
         .src(config.packages)
@@ -75,26 +112,48 @@ function releaseVersion(options) {
             question: function () {
                 return $.util.colors.blue(`Now next command will be performed:\n git checkout develop\n git commit\n git push origin develop\n git push origin staging\n Continue?`);
             },
-            input: '_key:y'
+            input: "_key:y"
         }))
         .pipe(through2.obj(function (chunk, enc, callback) {
-
-            execSync('git checkout develop', {stdio: [0, 1, 2]});
+            let localStagigRef=execSync("git rev-parse staging").toString();
+            let remoteStagigRef=execSync("git rev-parse origin/staging").toString();
+            if(localStagigRef != remoteStagigRef){
+                throw "Your local staging branch is ahead/behind remote one. Please fix it.";
+            }
+            this.push(chunk);
+            callback();
+        }))
+        .pipe(through2.obj(function (chunk, enc, callback) {
+            execSync("git checkout develop", {stdio: [0, 1, 2]});
             let output = spawnSync("git", ["status", "-s", "--untracked-files=no"]);
             if (output.stdout.toString().trim().length) {
                 uncommittedChanges = true;
             }
-
             this.push(chunk);
             callback();
 
         }))
+        // .pipe(lint())
         .pipe($.confirm({
             question: function () {
-                return uncommittedChanges ? $.util.colors.blue(`you have uncommitted changes continue? (All changes will be committed)?:`) : false;
+                return uncommittedChanges ? $.util.colors.blue("You have uncommitted changes continue? (All changes will be committed)?:") : false;
             },
-            input: '_key:y'
+            input: "_key:y"
         }))
+        .pipe($.confirm({
+            question: $.util.colors.blue("Run tests?"),
+            proceed: function (answer) {
+                if (answer.toUpperCase() === "Y") {
+                    runTest = true;
+                } else {
+                    runTest = false;
+                }
+                return true;
+            },
+            input: "_key"
+        }))
+        .pipe(tests("npm run test"))
+        .pipe(tests("npm run e2e"))
         .pipe($.bump(options))
         .pipe($.tap(function (file) {
             var json = JSON.parse(file.contents.toString());
@@ -102,35 +161,34 @@ function releaseVersion(options) {
         }))
         .pipe(gulp.dest(config.root))
         .pipe(through2.obj(function (chunk, enc, callback) {
-            execSync('git commit -a -m "Bumped version number to ' + version + '"' +
-                ' && git checkout staging' +
-                ' && git merge --no-ff develop' +
-                ' && git tag -a v' + version + '-dev -m "version ' + version + '"' +
-                ' && git push origin develop --tags' +
-                ' && git push origin staging --tags' +
-                ' && git checkout develop', {stdio: [0, 1, 2]});
+            execSync("git commit -a -m \"Bumped version number to " + version + "\"" +
+                " && git checkout staging" +
+                " && git merge --no-ff develop" +
+                " && git tag -a v" + version + " -m \"version " + version + "\"" +
+                " && git push origin develop --tags" +
+                " && git push origin staging --tags" +
+                " && git checkout develop", {stdio: [0, 1, 2]});
             callback();
         }));
+
 }
 
-gulp.task('release-patch-version', function (callback) {
+gulp.task("release-patch-version", function (callback) {
     let options = {};
-    options.type = 'patch';
+    options.type = "patch";
 
     let stream = releaseVersion(options);
-    stream.on('end', function () {
-
+    stream.on("end", function () {
         callback();
     });
 });
 
-gulp.task('release-minor-version', function () {
+gulp.task("release-minor-version", function (callback) {
     var options = {};
-    options.type = 'minor';
+    options.type = "minor";
 
     let stream = releaseVersion(options);
-    stream.on('end', function () {
-
+    stream.on("end", function () {
         callback();
     });
 });
