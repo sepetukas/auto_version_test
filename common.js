@@ -22,7 +22,7 @@ module.exports = {
                 input: '_key:y'
             }))
 
-            // bump the version number in those files
+            // bump the version rthyrthrth number in those files
             //     .pipe(bump({type: importance}))
             // save it back to filesystem
             // .pipe(gulp.dest('./'))
